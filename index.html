@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Upload báo cáo CSV</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      padding: 50px;
+      background-color: #f7f7f7;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+      font-size: 28px;
+    }
+    .container {
+      background-color: #fff;
+      padding: 40px;
+      border-radius: 15px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    }
+    input[type="file"] {
+      display: block;
+      margin: 20px 0;
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background-color: #007bff;
+      color: white;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+    button:hover {
+      background-color: #0056b3;
+      transform: scale(1.05);
+    }
+    pre {
+      margin-top: 20px;
+      white-space: pre-wrap;
+      background: #f4f4f4;
+      padding: 15px;
+      border-radius: 8px;
+      font-family: Consolas, monospace;
+      color: #333;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+    /* Error and success message styles */
+    .error {
+      color: red;
+      font-weight: bold;
+    }
+    .success {
+      color: green;
+      font-weight: bold;
+    }
+    .warning {
+      color: orange;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Upload báo cáo CSV</h1>
+    <input type="file" id="csvFile" accept=".csv" />
+    <button onclick="upload()">Tải lên</button>
+    <pre id="result"></pre>
+  </div>
+
+  <script>
+    async function upload() {
+      const fileInput = document.getElementById('csvFile');
+      const result = document.getElementById('result');
+      result.textContent = "";
+
+      if (!fileInput.files.length) {
+        result.textContent = "❌ Vui lòng chọn một file CSV.";
+        result.className = "error";
+        return;
+      }
+
+      const file = fileInput.files[0];
+      const formData = new FormData();
+      formData.append("file", file);
+
+      try {
+        const response = await fetch("http://localhost:8000/upload-csv/", {
+          method: "POST",
+          body: formData
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          result.textContent = "❌ Lỗi: " + (data.detail || "Không rõ nguyên nhân.");
+          result.className = "error";
+        } else {
+          let output = `✅ Tải lên thành công bảng: ${data.table}\n`;
+          output += `✔️ Số dòng đã thêm: ${data.rows_inserted}\n`;
+
+          if (data.status === "partial_success") {
+            output += `⚠️ Số dòng lỗi: ${data.rows_failed}\n`;
+            output += "Một số lỗi:\n" + data.errors.join("\n");
+            result.className = "warning";
+          } else {
+            result.className = "success";
+          }
+
+          result.textContent = output;
+        }
+      } catch (error) {
+        result.textContent = "❌ Lỗi kết nối tới máy chủ: " + error;
+        result.className = "error";
+      }
+    }
+  </script>
+
+</body>
+</html>
