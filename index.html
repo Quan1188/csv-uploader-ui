@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>Upload CSV</title>
+  <title>📤 Tải lên CSV</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -24,6 +24,9 @@
     .error {
       color: red;
     }
+    .warning {
+      color: orange;
+    }
     pre {
       background: #f8f8f8;
       padding: 10px;
@@ -37,7 +40,7 @@
   <div class="container">
     <h2>📤 Tải lên file CSV</h2>
     <input type="file" id="fileInput" accept=".csv" />
-    <br/>
+    <br/><br/>
     <button onclick="uploadFile()">Tải lên</button>
 
     <div id="message" class="message"></div>
@@ -50,10 +53,12 @@
       const message = document.getElementById('message');
       const responseBox = document.getElementById('response');
       message.textContent = '';
+      message.className = 'message';
       responseBox.textContent = '';
 
       if (!input.files.length) {
-        alert("Vui lòng chọn một file CSV.");
+        message.textContent = "❗ Vui lòng chọn một file CSV.";
+        message.classList.add("error");
         return;
       }
 
@@ -68,21 +73,22 @@
         });
 
         const result = await res.json();
+
         if (res.ok && result.status === "success") {
           message.textContent = "✅ Tải lên thành công!";
-          message.className = "message success";
+          message.classList.add("success");
         } else if (res.ok && result.status === "partial_success") {
-          message.textContent = `⚠️ Tải lên một phần: ${result.rows_inserted} dòng thành công, ${result.rows_failed} dòng lỗi.`;
-          message.className = "message error";
+          message.textContent = `⚠️ Một phần thành công: ${result.rows_inserted} dòng thành công, ${result.rows_failed} dòng lỗi.`;
+          message.classList.add("warning");
         } else {
           message.textContent = "❌ Tải lên thất bại.";
-          message.className = "message error";
+          message.classList.add("error");
         }
 
         responseBox.textContent = JSON.stringify(result, null, 2);
       } catch (error) {
         message.textContent = "❌ Lỗi kết nối đến máy chủ.";
-        message.className = "message error";
+        message.classList.add("error");
         responseBox.textContent = error.toString();
       }
     }
