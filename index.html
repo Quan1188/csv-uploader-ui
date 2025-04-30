@@ -67,7 +67,7 @@
       formData.append("file", file);
 
       try {
-        const res = await fetch("https://36cd-1-55-201-59.ngrok-free.app/upload-csv/", {
+        const res = await fetch("http://localhost:8000/upload-csv/", {
           method: "POST",
           body: formData
         });
