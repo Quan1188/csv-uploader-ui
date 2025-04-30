@@ -1,49 +1,59 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>Upload CSV to FastAPI</title>
+  <title>Upload CSV</title>
   <style>
     body {
       font-family: Arial, sans-serif;
       margin: 40px;
-      background-color: #fff;
+      background-color: #fefefe;
       color: #111;
-    }
-    h1 {
-      font-size: 2rem;
     }
     .container {
       max-width: 600px;
       margin: auto;
     }
-    button {
-      margin-top: 10px;
-      padding: 10px 20px;
-      font-size: 1rem;
+    .message {
+      font-weight: bold;
+      margin-top: 15px;
+    }
+    .success {
+      color: green;
+    }
+    .error {
+      color: red;
     }
     pre {
-      background: #f6f6f6;
-      padding: 15px;
+      background: #f8f8f8;
+      padding: 10px;
       border-radius: 5px;
-      margin-top: 20px;
+      margin-top: 10px;
+      overflow-x: auto;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>📤 Upload CSV file</h1>
+    <h2>📤 Tải lên file CSV</h2>
     <input type="file" id="fileInput" accept=".csv" />
     <br/>
-    <button onclick="uploadFile()">Upload</button>
+    <button onclick="uploadFile()">Tải lên</button>
+
+    <div id="message" class="message"></div>
     <pre id="response"></pre>
   </div>
 
   <script>
     async function uploadFile() {
       const input = document.getElementById('fileInput');
+      const message = document.getElementById('message');
+      const responseBox = document.getElementById('response');
+      message.textContent = '';
+      responseBox.textContent = '';
+
       if (!input.files.length) {
-        alert("Please select a file.");
+        alert("Vui lòng chọn một file CSV.");
         return;
       }
 
@@ -51,13 +61,30 @@
       const formData = new FormData();
       formData.append("file", file);
 
-      const res = await fetch("https://36cd-1-55-201-59.ngrok-free.app/upload-csv/", {
-        method: "POST",
-        body: formData
-      });
+      try {
+        const res = await fetch("https://36cd-1-55-201-59.ngrok-free.app/upload-csv/", {
+          method: "POST",
+          body: formData
+        });
 
-      const result = await res.json();
-      document.getElementById("response").textContent = JSON.stringify(result, null, 2);
+        const result = await res.json();
+        if (res.ok && result.status === "success") {
+          message.textContent = "✅ Tải lên thành công!";
+          message.className = "message success";
+        } else if (res.ok && result.status === "partial_success") {
+          message.textContent = `⚠️ Tải lên một phần: ${result.rows_inserted} dòng thành công, ${result.rows_failed} dòng lỗi.`;
+          message.className = "message error";
+        } else {
+          message.textContent = "❌ Tải lên thất bại.";
+          message.className = "message error";
+        }
+
+        responseBox.textContent = JSON.stringify(result, null, 2);
+      } catch (error) {
+        message.textContent = "❌ Lỗi kết nối đến máy chủ.";
+        message.className = "message error";
+        responseBox.textContent = error.toString();
+      }
     }
   </script>
 </body>
